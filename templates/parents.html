@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link rel="preconnect" href="https://dl.dir.freefiremobile.com" crossorigin>
+    <title>For Parents - Garena Free Fire</title>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a; min-height: 100vh; color: #fff;
+            overflow-x: hidden; line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        a { color: #FFBA00; text-decoration: none; transition: opacity 0.2s; }
+        a:hover { opacity: 0.85; }
+
+        /* ── Animations ── */
+        .fade-in { animation: fadeIn 0.45s cubic-bezier(0.23,1,0.32,1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* ── Header (identique phishing.html) ── */
+        .app-header {
+            background: rgba(10,10,10,0.97);
+            border-bottom: 1px solid #1f1f1f;
+            padding: 0 clamp(10px, 3vw, 20px);
+            height: clamp(52px, 10vw, 64px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            min-width: 0;
+            gap: 12px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 2vw, 14px);
+            text-decoration: none;
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .header-logo { height: clamp(20px, 4vw, 26px); display: block; }
+        .header-label {
+            color: #666;
+            font-size: clamp(10px, 1.8vw, 12px);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            border-left: 1px solid #333;
+            padding-left: clamp(8px, 2vw, 14px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Hero Section ── */
+        .hero-section {
+            background: linear-gradient(180deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.6) 100%),
+                        url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/home_news_bg.c422198.jpg') center top / cover no-repeat;
+            padding: clamp(28px, 6vw, 56px) clamp(12px, 3vw, 24px) clamp(24px, 5vw, 48px);
+            text-align: center;
+        }
+        .hero-title {
+            font-size: clamp(22px, 5vw, 42px);
+            font-weight: 900;
+            margin: 0 0 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.1;
+            color: #fff;
+        }
+        .hero-sub {
+            color: #999;
+            font-size: clamp(12px, 2vw, 15px);
+            margin: 0 auto;
+            max-width: 480px;
+            line-height: 1.6;
+            padding: 0 12px;
+        }
+
+        /* ── Main Content ── */
+        .main-content {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: clamp(24px, 5vw, 48px) clamp(10px, 3vw, 20px) clamp(40px, 8vw, 80px);
+        }
+
+        /* ── Page Title ── */
+        .page-title {
+            font-size: clamp(18px, 4vw, 28px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 clamp(20px, 4vw, 32px);
+            color: #fff;
+            line-height: 1.2;
+        }
+        .page-title span { color: #FFBA00; }
+
+        /* ── Section Title avec chevron ── */
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .section-chevron {
+            width: 52px;
+            height: 7px;
+            flex-shrink: 0;
+        }
+        .section-title {
+            font-size: clamp(16px, 3vw, 20px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #fff;
+        }
+        .section-desc {
+            color: #777;
+            font-size: clamp(11px, 2vw, 13px);
+            margin: 0 0 20px clamp(44px, 8vw, 64px);
+            line-height: 1.6;
+        }
+
+        /* ── Cards (même style que inputs dans phishing.html) ── */
+        .card {
+            background: rgb(17, 17, 17);
+            border: 1px solid rgb(42, 42, 42);
+            border-radius: 8px;
+            padding: clamp(20px, 4vw, 28px);
+            margin-bottom: 16px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            border-color: rgba(255,186,0,0.15);
+            box-shadow: 0 0 0 1px rgba(255,186,0,0.04);
+        }
+        .card h2 {
+            font-size: clamp(14px, 2.5vw, 17px);
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .card p, .card li {
+            color: #888;
+            font-size: clamp(12px, 2vw, 14px);
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        .card ul {
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+        .card li {
+            margin-bottom: 6px;
+        }
+        .card a {
+            color: #FFBA00;
+            font-weight: 600;
+        }
+
+        /* ── Back Link ── */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #FFBA00;
+            font-weight: 700;
+            font-size: clamp(12px, 2vw, 14px);
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover { opacity: 0.8; }
+        .back-link svg { flex-shrink: 0; }
+
+        /* ── Buttons (identique phishing.html) ── */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: clamp(14px, 3vw, 18px) clamp(20px, 4vw, 32px);
+            background: linear-gradient(135deg, #ffaf00 0%, #ffba00 50%, #ffc800 100%);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-size: clamp(15px, 2.5vw, 17px);
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.23,1,0.32,1);
+            box-shadow: 0 4px 16px rgba(255,186,0,0.18);
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255,186,0,0.28);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(255,186,0,0.15);
+        }
+
+        /* ── Footer (identique phishing.html) ── */
+        .app-footer {
+            border-top: 1px solid #1a1a1a;
+            padding: clamp(28px, 5vw, 40px) clamp(12px, 3vw, 24px);
+            text-align: center;
+            background: #0a0a0a;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: clamp(12px, 3vw, 28px);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: #666;
+            text-decoration: none;
+            font-size: clamp(10px, 1.8vw, 12px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: #FFBA00; }
+
+        /* ── Responsive ── */
+        @media (max-width: 360px) {
+            .main-content { padding: 20px 14px 32px; }
+            .section-desc { margin-left: 40px; }
+        }
+        @media (min-width: 1200px) {
+            .main-content { max-width: 800px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
+</head>
+<body>
+<header class="app-header">
+    <a href="/" class="header-left">
+      <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" alt="Free Fire" class="header-logo">
+      <span class="header-label">Account Security</span>
+    </a>
+</header>
+<svg width="100%" viewBox="0 0 1440 25" fill="none" style="display: block;">
+    <path d="M0 23.6899H248.724L270.737 5.17356C272.873 3.03632 275.77 1.8349 278.792 1.8335H1440" stroke="#FFAF00" stroke-width="2" stroke-miterlimit="10"></path>
+    <path d="M248.546 23.3337H0V18.7046H253.887L248.546 23.3337Z" fill="#FFAF00"></path>
+</svg>
+
+
+<section class="hero-section" style="padding: clamp(24px, 5vw, 40px) clamp(12px, 3vw, 24px) clamp(20px, 4vw, 36px);">
+    <h1 class="hero-title" style="font-size: clamp(20px, 4.5vw, 36px);">
+        For <span style="color: #FFBA00;">Parents</span>
+    </h1>
+    <p class="hero-sub">
+        Guidance and tools for a safe gaming experience
+    </p>
+</section>
+
+<svg width="55%" viewBox="0 0 809 5" fill="none" style="display: block; margin: 0 auto;">
+    <path d="M0 3.95801H810" stroke="#FFAF00" stroke-width="2" stroke-miterlimit="10"></path>
+    <path d="M596.763 0H810V3.83467H590.574L593.672 1.15041C594.53 0.407623 595.628 0 596.763 0Z" fill="#FFAF00"></path>
+</svg>
+
+<main class="main-content">
+    <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Home
+    </a>
+
+    <div class="fade-in">
+        <div class="card">
+            <div class="section-header">
+                <svg class="section-chevron" viewBox="0 0 165 9" fill="#FFBA00">
+    <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path>
+    <path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path>
+    <path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path>
+    <path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+</svg>
+                <h2 class="section-title">Parental Guidance</h2>
+            </div>
+            <p class="section-desc">Keeping children safe while gaming</p>
+            <p>We are committed to providing a safe and enjoyable gaming environment for players of all ages. This page provides information and resources for parents and guardians to help ensure a positive experience.</p>
+            <p>Garena Free Fire is rated for teens and above. We encourage parents to review the game content and features to determine if it is appropriate for their child.</p>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <svg class="section-chevron" viewBox="0 0 165 9" fill="#FFBA00">
+    <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path>
+    <path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path>
+    <path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path>
+    <path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+</svg>
+                <h2 class="section-title">In-Game Purchases</h2>
+            </div>
+            <p class="section-desc">Managing spending and transactions</p>
+            <p>Our games may include options for in-game purchases. We strongly recommend that parents set up password protection for purchases on the devices their children use to prevent unauthorized transactions.</p>
+            <p>On most platforms, you can require a password for every purchase or set up parental controls to restrict spending.</p>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <svg class="section-chevron" viewBox="0 0 165 9" fill="#FFBA00">
+    <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path>
+    <path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path>
+    <path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path>
+    <path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+</svg>
+                <h2 class="section-title">Playtime Management</h2>
+            </div>
+            <p class="section-desc">Balancing gaming with daily life</p>
+            <p>We encourage parents to monitor their children's playtime and ensure a healthy balance between gaming, school, physical activity, and social interactions. Consider setting daily time limits for gaming sessions.</p>
+            <p>Many devices and platforms offer built-in screen time management tools that can help enforce these limits.</p>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <svg class="section-chevron" viewBox="0 0 165 9" fill="#FFBA00">
+    <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path>
+    <path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path>
+    <path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path>
+    <path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+</svg>
+                <h2 class="section-title">Online Safety Tips</h2>
+            </div>
+            <p class="section-desc">Best practices for young players</p>
+            <ul>
+                <li>Remind your children not to share personal information with strangers online</li>
+                <li>Encourage them to report any inappropriate behavior or content immediately</li>
+                <li>Review their friend lists and privacy settings regularly</li>
+                <li>Discuss the importance of respectful communication with other players</li>
+                <li>Ensure they understand that not everyone online is who they claim to be</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <svg class="section-chevron" viewBox="0 0 165 9" fill="#FFBA00">
+    <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path>
+    <path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path>
+    <path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path>
+    <path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+</svg>
+                <h2 class="section-title">Account Controls</h2>
+            </div>
+            <p class="section-desc">Securing your child's account</p>
+            <p>Parents can help manage their child's account by ensuring strong, unique passwords are used and enabling two-factor authentication for additional security. Regularly review account activity and linked devices.</p>
+        </div>
+    </div>
+</main>
+
+<footer class="app-footer">
+    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/garena_logo.b28b2b6.png" alt="Garena" style="height: 22px; opacity: 0.5; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
+    <div class="footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/parents">For Parents</a>
+      <a href="/faq">FAQ</a>
+      <a href="/terms">Terms of Service</a>
+    </div>
+    <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.6;">Copyright &copy; Garena International. Trademarks belong to their respective owners.<br>All rights reserved.</p>
+</footer>
+
+</body>
+</html>

