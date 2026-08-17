@@ -75,11 +75,11 @@ try:
     from firebase.firebase import db
     import firebase_admin
     from firebase_admin import auth as admin_auth
-except ImportError as e:
+except Exception as e:
     db = None
     admin_auth = None
     firebase_admin = None
-    logger.warning("Firebase module not found: %s", str(e))
+    logger.warning("Firebase module not available: %s", str(e))
 
 # ═══════════════════════════════════════════════════
 # APP INIT
