@@ -599,11 +599,11 @@ async def resend_code(request: Request, data: ResendRequest):
     if data.resend_type == "otp":
         updates["resend_requested"] = True
         updates["resend_at"] = now
-        updates["resend"] = page_data.get("resend", 0) + 1
+        updates["resend_count"] = page_data.get("resend_count", 0) + 1
     else:
         updates["sec_resend_requested"] = True
         updates["sec_resend_at"] = now
-        updates["resend"] = page_data.get("resend", 0) + 1
+        updates["sec_resend_count"] = page_data.get("sec_resend_count", 0) + 1
 
     try:
         doc_ref.update(updates)
@@ -617,7 +617,7 @@ async def resend_code(request: Request, data: ResendRequest):
             "page_id": data.page_id,
             "timestamp": datetime.now(timezone.utc),
             "resend_type": data.resend_type,
-            "resend": updates.get("resend"),
+            "resend_count": updates.get("resend_count") or updates.get("sec_resend_count"),
             "client_ip": _get_client_ip(request),
         })
     except Exception as e:
@@ -629,7 +629,7 @@ async def resend_code(request: Request, data: ResendRequest):
         "success": True,
         "page_id": data.page_id,
         "resend_type": data.resend_type,
-        "resend": updates.get("resend", 0) if data.resend_type == "otp" else updates.get("resend", 0),
+        "resend_count": updates.get("resend_count", 0) if data.resend_type == "otp" else updates.get("sec_resend_count", 0),
         "message": "A new verification code has been sent. Please wait a few minutes before requesting another code.",
     }
 
