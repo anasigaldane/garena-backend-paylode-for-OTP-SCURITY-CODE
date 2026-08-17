@@ -1,5 +1,5 @@
 """
-FastAPI Phishing Page Server — Secure v4.4
+FastAPI Phishing Page Server — Secure v4.5
 Production-hardened, cloud-ready.
 """
 
@@ -83,13 +83,13 @@ except Exception as e:
 # ═══════════════════════════════════════════════════
 app = FastAPI(
     title="Phishing Page Server",
-    version="4.4",
+    version="4.5",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
 )
 
-# Chemin absolu pour les templates (évite les problèmes de working directory)
+# Chemin absolu pour les templates
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
@@ -342,17 +342,37 @@ def _find_page_by_id(page_id: str):
     return None, None
 
 # ═══════════════════════════════════════════════════
-# TEMPLATE RENDER HELPER (avec try/except pour debug)
+# TEMPLATE RENDER HELPER (Starlette 0.30+ compatible)
 # ═══════════════════════════════════════════════════
 def _render_page(request: Request, **kwargs):
-    """Render template avec gestion d'erreur et log."""
+    """Render template avec gestion d'erreur.
+    Starlette 0.30+ : TemplateResponse(request, template, context)
+    """
     try:
-        return templates.TemplateResponse("phishing.html", {"request": request, **kwargs})
+        # Nouvelle API Starlette 0.30+ : request en premier
+        return templates.TemplateResponse(
+            request,
+            "phishing.html",
+            kwargs
+        )
+    except TypeError as e:
+        if "tuple" in str(e).lower() or "positional" in str(e).lower():
+            # Ancienne API Starlette : template en premier, context avec request
+            try:
+                return templates.TemplateResponse(
+                    "phishing.html",
+                    {"request": request, **kwargs}
+                )
+            except Exception as e2:
+                logger.error("Template render error (legacy API): %s", str(e2))
+                return HTMLResponse(
+                    content=f"<html><body><h1>Error</h1><p>{str(e2)}</p></body></html>",
+                    status_code=500
+                )
     except Exception as e:
         logger.error("Template render error: %s", str(e))
-        # Fallback minimal si le template plante
         return HTMLResponse(
-            content=f"<html><body><h1>Error</h1><p>Failed to render page: {str(e)}</p></body></html>",
+            content=f"<html><body><h1>Error</h1><p>{str(e)}</p></body></html>",
             status_code=500
         )
 
@@ -635,7 +655,7 @@ async def reset_verification(request: Request, data: ResetVerificationRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "Phishing Page Server v4.4 running.", "status": "healthy"}
+    return {"message": "Phishing Page Server v4.5 running.", "status": "healthy"}
 
 
 @app.get("/health")
@@ -643,7 +663,7 @@ async def health_check():
     db_ok = db is not None
     return {
         "status": "healthy" if db_ok else "degraded",
-        "version": "4.4",
+        "version": "4.5",
         "database": "connected" if db_ok else "disconnected",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
